@@ -1,7 +1,18 @@
-export const getCommitInfo = async (arr) => {
-    return new Promise(async (resolve, reject) => {
+'use strict';
+
+import Logger from '../utils/logger';
+
+const logger = new Logger();
+
+class Iterator {
+    constructor(arr) {
+        this.dataArray = arr;
+    }
+
+    // Static method to extract author, commit comment date and repos name from response data
+    static async getCommitInfo(dataArray) {
         try {
-            let commitDetails = await Promise.all(arr.map(async (value) => {
+            let commitDetails = await Promise.all(dataArray.map(async (value) => {
                 let obj = {}
                 obj.repository = await value.repository;
                 if (value.author) {
@@ -15,31 +26,31 @@ export const getCommitInfo = async (arr) => {
                 } else {
                     obj.commit_date = 'not available';
                 }
-
-
                 return obj
+
             }))
             let flatArray = await [].concat.apply([], commitDetails);
-            resolve(flatArray);
-
-        } catch (e) {
-            console.log(e)
+            return flatArray
+        } catch (error) {
+            return []
         }
-    })
-}
+    }
 
-export const filterDataBasedOnDate = async (arr) => {
-    return new Promise(async (resolve, reject) => {
+    // Static method to filter data from response data
+    static async filterData(dataArray) {
         try {
-            let flatArray = await [].concat.apply([], arr);
+            let flatArray = await [].concat.apply([], dataArray);
             let commitDetails = await Promise.all(flatArray.filter(async (value) => {
                 var com_date = new Date(value.commit_date)
                 var year = com_date.getFullYear();
                 return year >= 2017;
             }))
-            resolve(commitDetails)
+            return commitDetails
         } catch (e) {
-            console.log(e)
+            logger.log(`error occured in iterator  at : ${new Date()} is : ${e}`, 'error');
+            return []
         }
-    })
+    }
 }
+
+export default Iterator;
